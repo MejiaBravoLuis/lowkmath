@@ -91,3 +91,16 @@ for (const [name, cfg, want] of known) {
   if (got !== want) throw new Error(`${name}: motor=${got} esperado=${want}`)
   console.log(`OK ${name.padEnd(16)} ${got.toLocaleString('en-US')}`)
 }
+
+// Parte 13: identidades de conjuntos contra conteo directo
+import { setAnalysis } from './formulas.ts'
+const rows = Object.fromEntries(setAnalysis().map((r) => [r.symbol, r.value]))
+const direct: [string, bigint][] = [
+  ['N ∪ M', 68n ** 10n - 32n ** 10n], // complemento: sin número y sin mayúscula usa 68−10−26 = 32
+  ['N − M', 42n ** 10n - 32n ** 10n], // sin mayúscula (42) pero con número
+  ['S', 68n ** 10n - 62n ** 10n],
+]
+for (const [k, want] of direct) {
+  if (rows[k] !== want) throw new Error(`Parte 13 ${k}: motor=${rows[k]} esperado=${want}`)
+  console.log(`OK Parte 13 ${k.padEnd(6)} ${want.toLocaleString('en-US')}`)
+}

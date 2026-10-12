@@ -1,15 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-  --color-paper: #faf8f4;
-  --color-ink: #1c1b19;
-  --color-accent: #1f5d50;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --color-accent: #0f766e;
+  --color-paper: #f6f4ee;
+  --color-ink: #1b1f1e;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  background:
+    radial-gradient(60rem 28rem at 90% -8%, rgb(15 118 110 / 0.12), transparent 70%),
+    radial-gradient(44rem 26rem at -8% 6%, rgb(244 114 182 / 0.10), transparent 70%),
+    var(--color-paper);
+  background-attachment: fixed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }

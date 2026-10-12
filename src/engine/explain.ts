@@ -153,3 +153,36 @@ export function procedureText(c: Config, r: CountResult): string {
     `6. Interpretación: ${e.interpretation.join(' ')}`,
   ].join('\n')
 }
+
+/** Explicación en lenguaje cotidiano, una frase por idea. */
+export function plainStory(c: Config, r: CountResult): string[] {
+  const main = r.terms[0]
+  const k = c.length
+  const out: string[] = []
+  out.push(`Imagina ${k} casilla${k === 1 ? '' : 's'} vacía${k === 1 ? '' : 's'}, una por cada carácter de la contraseña.`)
+  out.push(
+    c.repetition
+      ? 'Como se puede repetir, cada casilla tiene sus opciones sin importar lo que pusiste en las demás.'
+      : 'Como no se puede repetir, cada carácter que usas deja de estar disponible para las demás casillas: por eso las opciones van bajando.',
+  )
+  if (c.endsWithDigit) out.push(`La última casilla solo acepta números: ${main.setSizes[k - 1]} opciones.`)
+  if (c.noStartSymbol) out.push(`La primera casilla no acepta símbolos: ${main.setSizes[0]} opciones.`)
+  out.push('Para saber cuántas contraseñas hay, se multiplican las opciones de todas las casillas (regla del producto).')
+  if (r.required.length > 0) {
+    const names = r.required.map((x) => `${x === 'digit' ? 'un' : 'una'} ${SINGULAR[x]}`)
+    const rules = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`
+    out.push(
+      `Contar "al menos ${rules}" directamente es difícil. El truco: se cuentan todas las contraseñas y se restan las que NO cumplen ${r.required.length === 1 ? 'la regla' : 'alguna de las reglas'}.`,
+    )
+    if (r.required.length > 1) {
+      out.push(
+        'Las que fallan varias reglas a la vez se restaron más de una vez, así que se vuelven a sumar (inclusión–exclusión).',
+      )
+    }
+  }
+  return out
+}
+
+const SINGULAR: Record<CharClass, string> = {
+  lower: 'minúscula', upper: 'mayúscula', digit: 'número', symbol: 'símbolo',
+}
