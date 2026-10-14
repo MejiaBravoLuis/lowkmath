@@ -1,123 +1,141 @@
-import { useMemo, useState } from 'react'
-import FormulaSheet from './components/FormulaSheet.tsx'
-import ConfigForm from './components/ConfigForm.tsx'
-import ReferenceTables from './components/ReferenceTables.tsx'
-import ResultPanel from './components/ResultPanel.tsx'
-import BlurText from './components/reactbits/BlurText.tsx'
-import ShinyText from './components/reactbits/ShinyText.tsx'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import Catalog from './components/Catalog.tsx'
+import AppliedFormulas from './components/AppliedFormulas.tsx'
+import Flashcards from './components/Flashcards.tsx'
+import FormalProcedure from './components/FormalProcedure.tsx'
+import Rules, { Bag } from './components/Rules.tsx'
+import Story from './components/Story.tsx'
+import Tray from './components/Tray.tsx'
+import Vault from './components/Vault.tsx'
+import Venn from './components/Venn.tsx'
+import ClickSpark from './components/reactbits/ClickSpark.tsx'
+import DecryptedText from './components/reactbits/DecryptedText.tsx'
 import { compute } from './engine/count.ts'
 import { defaultConfig, presets } from './engine/presets.ts'
+import { samplePassword } from './engine/sample.ts'
 import type { Config } from './engine/types.ts'
 
 const same = (a: Config, b: Config) => JSON.stringify(a) === JSON.stringify(b)
 
-const HOW = [
-  { n: '1', t: 'Elige los caracteres', d: 'Cuántas minúsculas, mayúsculas, números y símbolos se pueden usar.' },
-  { n: '2', t: 'Define casillas y reglas', d: 'Longitud, si se puede repetir y qué condiciones debe cumplir.' },
-  { n: '3', t: 'Lee la respuesta', d: 'Ves el total y el procedimiento paso a paso, listo para tu informe.' },
-]
+function Section({ id, title, lead, children }: { id?: string; title: string; lead?: string; children: ReactNode }) {
+  return (
+    <section id={id} className="mt-20 scroll-mt-6">
+      <h2 className="font-display text-2xl font-semibold leading-tight sm:text-3xl">{title}</h2>
+      {lead && <p className="mt-2 max-w-2xl text-ink-soft">{lead}</p>}
+      <div className="mt-6">{children}</div>
+    </section>
+  )
+}
+
+function Step({ n, title, hint, children }: { n: number; title: string; hint: string; children: ReactNode }) {
+  return (
+    <section className="rounded-[2rem] bg-white/55 p-5 shadow-[0_5px_0_var(--color-steel)] backdrop-blur sm:p-6">
+      <header className="mb-4 flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-ink font-display text-sm font-bold text-white">{n}</span>
+        <div>
+          <h2 className="font-display text-base font-semibold leading-tight sm:text-lg">{title}</h2>
+          <p className="mt-0.5 text-sm text-ink-soft">{hint}</p>
+        </div>
+      </header>
+      {children}
+    </section>
+  )
+}
 
 export default function App() {
   const [config, setConfig] = useState<Config>(defaultConfig)
+  const [spin, setSpin] = useState(0)
   const result = useMemo(() => compute(config), [config])
+  // Solo decoración: una contraseña de ejemplo que cumple la política. No interviene en ningún conteo.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const sample = useMemo(() => samplePassword(config), [config, spin])
 
+  const onSpin = useCallback(() => setSpin((s) => s + 1), [])
   const pick = (c: Config) => {
     setConfig(c)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    document.getElementById('boveda')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-      <header className="mb-8">
-        <ShinyText
-          text="Matemática Discreta · Proyecto final"
-          color="#0f766e"
-          shineColor="#5eead4"
-          speed={3}
-          className="text-xs font-semibold uppercase tracking-widest"
-        />
-        <div role="heading" aria-level={1} className="mt-2">
-          <BlurText
-            text="¿Cuántas contraseñas distintas existen?"
-            delay={90}
-            animateBy="words"
-            className="text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl"
-          />
-        </div>
-        <p className="mt-3 max-w-2xl text-base text-black/70">
-          Contar contraseñas es <strong>multiplicar las opciones de cada casilla</strong>. Por ejemplo, 3 casillas
-          con 10 dígitos posibles dan 10 × 10 × 10 = 1,000 contraseñas. Esta calculadora hace lo mismo con
-          cualquier política y te explica cada paso.
-        </p>
+    <ClickSpark sparkColor="#15163a" sparkCount={8} sparkRadius={22} duration={450}>
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
+        <header>
+          <p className="font-display text-xs font-medium text-ink-soft">Matemática Discreta · Proyecto final · SecureTech Solutions</p>
+          <h1 className="mt-3 max-w-4xl font-display text-[2rem] font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+            <DecryptedText
+              text="¿Cuántas contraseñas distintas existen?"
+              speed={38}
+              maxIterations={14}
+              sequential
+              revealDirection="start"
+              animateOn="view"
+              characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&"
+            />
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg text-ink-soft">
+            Contar contraseñas es <strong className="text-ink">multiplicar las opciones de cada casilla</strong>. Tres casillas con
+            10 dígitos posibles dan 10 × 10 × 10 = 1,000. Gira las ruedas de la bóveda, cambia las reglas y mira cómo se mueve el número.
+          </p>
 
-        <p className="mt-3 text-sm">
-          <a href="#formulario" className="font-semibold text-accent underline underline-offset-4">Ver el formulario completo ↓</a>
-        </p>
+          <div className="mt-8" role="group" aria-label="Ejemplos del proyecto">
+            <p className="mb-3 text-sm font-semibold">Cuelga una llave del llavero para cargar un ejemplo del proyecto</p>
+            <div className="-mx-4 flex gap-x-3 gap-y-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&>button]:shrink-0">
+              {presets.map((p) => {
+                const active = same(p.config, config)
+                return (
+                  <button key={p.id} type="button" aria-pressed={active} onClick={() => setConfig(p.config)} className={`keytag ${active ? 'is-on' : ''}`}>
+                    <span className={`font-mono text-[11px] ${active ? 'text-digit' : 'text-lower'}`}>{p.group.replace('Parte ', 'P')}</span>
+                    {p.title}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </header>
 
-        <ol className="mt-6 grid gap-3 sm:grid-cols-3">
-          {HOW.map((h) => (
-            <li key={h.n} className="flex gap-3 rounded-2xl border border-black/10 bg-white/70 p-4 backdrop-blur">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-                {h.n}
-              </span>
-              <span>
-                <span className="block text-sm font-bold">{h.t}</span>
-                <span className="block text-xs text-black/60">{h.d}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </header>
+        <main className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
+          <div id="boveda" className="scroll-mt-4 lg:sticky lg:top-4 lg:order-2">
+            <Vault config={config} result={result} sample={sample} spin={spin} onSpin={onSpin} onLength={(n) => setConfig((c) => ({ ...c, length: n }))} />
+          </div>
+          <div className="space-y-6 lg:order-1">
+            <Step n={1} title="Arma el teclado" hint="Toca una tecla: se encienden todas hasta esa. Cada tecla encendida es un carácter disponible.">
+              <Tray config={config} onChange={setConfig} />
+            </Step>
+            <Step n={2} title="¿Se puede repetir un carácter?" hint="Cambia la fórmula de nᵏ a una permutación.">
+              <Bag config={config} onChange={setConfig} />
+            </Step>
+            <Step n={3} title="Sella las reglas" hint="Cada sello recorta el número de contraseñas; debajo está su fórmula (k = casillas).">
+              <Rules config={config} onChange={setConfig} />
+            </Step>
+          </div>
+        </main>
 
-      <section aria-label="Ejemplos del proyecto" className="mb-6">
-        <h2 className="mb-2 text-sm font-bold">Empieza con un ejemplo del proyecto</h2>
-        <div className="flex flex-wrap gap-2">
-          {presets.map((p) => {
-            const active = same(p.config, config)
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setConfig(p.config)}
-                aria-pressed={active}
-                className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                  active
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-black/15 bg-white hover:border-accent hover:text-accent'
-                }`}
-              >
-                <span className={`mr-1.5 font-bold ${active ? 'text-white/80' : 'text-accent'}`}>
-                  {p.group.replace('Parte ', 'P')}
-                </span>
-                {p.title}
-              </button>
-            )
-          })}
-        </div>
-      </section>
+        <Section id="calculo" title="El cálculo, paso a paso" lead="Lo que ves en la bóveda, explicado con palabras, con fórmulas y en el formato que pide el informe.">
+          <div className="space-y-6">
+            <Story config={config} result={result} />
+            <AppliedFormulas config={config} result={result} />
+            <FormalProcedure config={config} result={result} />
+          </div>
+        </Section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-start">
-        <ConfigForm config={config} onChange={setConfig} />
-        <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1">
-          <ResultPanel config={config} result={result} />
-        </div>
+        <Section title="Comparaciones del proyecto" lead="Se calculan solas con el mismo motor. Toca cualquiera para cargarla en la bóveda.">
+          <Catalog onPick={pick} />
+        </Section>
+
+        <Section title="Parte 13 · Teoría de conjuntos" lead="Con la política completa: N son las contraseñas con al menos un número y M las que tienen al menos una mayúscula.">
+          <Venn />
+        </Section>
+
+        <Section id="formulario" title="Formulario" lead="Todas las fórmulas que se usan. Voltea cada tarjeta para ver cuándo aplicarla y un ejemplo.">
+          <Flashcards />
+        </Section>
+
+        <footer className="mt-20 text-xs text-ink-soft">
+          Los cálculos usan enteros de precisión arbitraria (BigInt) y corren en tu navegador; no hay servidor. Las contraseñas de las
+          ruedas son solo ejemplos al azar que cumplen la política. Componentes animados de{' '}
+          <a className="underline" href="https://reactbits.dev" target="_blank" rel="noreferrer">React Bits</a>.
+        </footer>
       </div>
-
-      <section className="mt-12">
-        <h2 className="mb-3 text-xl font-bold">Tablas comparativas del proyecto</h2>
-        <ReferenceTables onPick={pick} />
-      </section>
-
-      <section className="mt-12" id="formulario">
-        <h2 className="mb-1 text-xl font-bold">Formulario</h2>
-        <p className="mb-3 text-sm text-black/60">Todas las fórmulas que se usan, cuándo aplicarlas y un ejemplo.</p>
-        <FormulaSheet />
-      </section>
-
-      <footer className="mt-10 border-t border-black/10 pt-4 text-xs text-black/50">
-        Los cálculos usan enteros de precisión arbitraria (BigInt) y corren en tu navegador; no hay servidor.
-        Componentes animados de <a className="underline" href="https://reactbits.dev" target="_blank" rel="noreferrer">React Bits</a>.
-      </footer>
-    </div>
+    </ClickSpark>
   )
 }

@@ -1,27 +1,180 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --color-accent: #0f766e;
-  --color-paper: #f6f4ee;
-  --color-ink: #1b1f1e;
+  --font-display: "Unbounded", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-ground: #e2e6ff;
+  --color-paper: #f6f7ff;
+  --color-ink: #15163a;
+  --color-ink-soft: #4b4d7a;
+  --color-steel: #c7cde6;
+  --color-steel-deep: #8d94bd;
+
+  --color-lower: #2f6bff;
+  --color-lower-soft: #d3e0ff;
+  --color-upper: #e8399b;
+  --color-upper-soft: #ffd6ea;
+  --color-digit: #ffb000;
+  --color-digit-soft: #ffeab3;
+  --color-symbol: #0fae82;
+  --color-symbol-soft: #c4f0df;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
+  background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 3px; border-radius: 6px; }
+
+/* ---------- colores por tipo de carácter ---------- */
+[data-kind="lower"]  { --k: var(--color-lower);  --k-soft: var(--color-lower-soft);  --k-deep: #1b49c4; }
+[data-kind="upper"]  { --k: var(--color-upper);  --k-soft: var(--color-upper-soft);  --k-deep: #a81f6f; }
+[data-kind="digit"]  { --k: var(--color-digit);  --k-soft: var(--color-digit-soft);  --k-deep: #b87d00; }
+[data-kind="symbol"] { --k: var(--color-symbol); --k-soft: var(--color-symbol-soft); --k-deep: #087a5a; }
+
+/* ---------- la bóveda: riel y ruedas ---------- */
+.rail {
+  position: relative;
+  border-radius: 2rem;
+  padding: 1.1rem 1.1rem 0.9rem;
   background:
-    radial-gradient(60rem 28rem at 90% -8%, rgb(15 118 110 / 0.12), transparent 70%),
-    radial-gradient(44rem 26rem at -8% 6%, rgb(244 114 182 / 0.10), transparent 70%),
-    var(--color-paper);
-  background-attachment: fixed;
+    linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,0) 22%),
+    linear-gradient(180deg, #d6dbf1, #b9c0e0);
+  box-shadow:
+    inset 0 -6px 0 rgba(21,22,58,.12),
+    inset 0 0 0 2px rgba(255,255,255,.55),
+    0 14px 30px -12px rgba(21,22,58,.35);
+}
+
+.dial {
+  position: relative;
+  width: 3.5rem;
+  height: 7rem;
+  border-radius: 1.15rem;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(90deg, #e9ecff, #ffffff 35%, #ffffff 65%, #e3e7fb);
+  box-shadow:
+    inset 0 0 0 2px rgba(21,22,58,.1),
+    0 5px 0 var(--color-steel-deep),
+    0 10px 16px -4px rgba(21,22,58,.35);
+  transition: transform .2s cubic-bezier(.3,1.6,.5,1), box-shadow .2s;
+}
+.dial:hover { transform: translateY(-3px); }
+.dial:active { transform: translateY(2px); box-shadow: inset 0 0 0 2px rgba(21,22,58,.1), 0 2px 0 var(--color-steel-deep), 0 4px 8px -4px rgba(21,22,58,.4); }
+
+.dial::before, .dial::after { content: ""; position: absolute; left: 0; right: 0; height: 36%; z-index: 2; pointer-events: none; }
+.dial::before { top: 0; background: linear-gradient(180deg, rgba(21,22,58,.34), rgba(21,22,58,0)); }
+.dial::after { bottom: 0; background: linear-gradient(0deg, rgba(21,22,58,.34), rgba(21,22,58,0)); }
+
+.dial-band { position: absolute; inset: 50% 0 auto 0; height: 2.7rem; transform: translateY(-50%); background: var(--k-soft, #eef); z-index: 0; transition: background .25s; }
+.dial-col { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; font-family: var(--font-mono); font-weight: 600; }
+.dial-col > span { display: block; line-height: 2.3rem; height: 2.3rem; }
+.dial-prev, .dial-next { font-size: 1.2rem; opacity: .35; transform: scale(.8); }
+.dial-cur { font-size: 1.85rem; color: var(--k, var(--color-ink)); }
+.dial.is-spinning .dial-cur { filter: blur(1.2px); animation: dial-jitter .09s linear infinite; }
+.dial.is-settled .dial-cur { animation: dial-settle .32s cubic-bezier(.3,1.8,.5,1); }
+
+@keyframes dial-jitter { 0% { transform: translateY(-3px); } 50% { transform: translateY(3px); } 100% { transform: translateY(-3px); } }
+@keyframes dial-settle { 0% { transform: translateY(-14px) scale(.9); } 100% { transform: translateY(0) scale(1); } }
+
+.dial-ghost {
+  width: 3.5rem; height: 7rem; border-radius: 1.15rem; display: flex; align-items: center; justify-content: center;
+  border: 3px dashed rgba(21,22,58,.35); color: rgba(21,22,58,.55); font-size: 1.8rem; font-weight: 700;
+  background: rgba(255,255,255,.25); cursor: pointer; transition: transform .2s cubic-bezier(.3,1.6,.5,1), background .2s;
+}
+.dial-ghost:hover { transform: rotate(-6deg) scale(1.05); background: rgba(255,255,255,.6); }
+
+/* ---------- cuentakilómetros ---------- */
+.odo {
+  border-radius: 1.4rem;
+  padding: .9rem 1.1rem;
+  background: linear-gradient(180deg, #23245a, var(--color-ink));
+  box-shadow: 0 0 0 5px var(--color-steel), 0 0 0 7px var(--color-steel-deep), inset 0 3px 8px rgba(0,0,0,.5), 0 14px 24px -10px rgba(21,22,58,.5);
+  position: relative;
+  overflow: hidden;
+}
+.odo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0) 45%); pointer-events: none; }
+.odo-row { display: flex; align-items: center; justify-content: center; white-space: nowrap; font-family: var(--font-mono); font-weight: 600; color: #f4f6ff; }
+.odo-col { display: inline-block; height: 1.3em; width: .64em; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 50%, rgba(0,0,0,.25)); border-radius: .12em; margin: 0 .02em; }
+.odo-strip { display: flex; flex-direction: column; transition: transform 1s cubic-bezier(.2,.9,.25,1.12); }
+.odo-strip > span { display: block; height: 1.3em; line-height: 1.3em; text-align: center; }
+.odo-sep { display: inline-block; width: .3em; text-align: center; color: var(--color-digit); line-height: 1.3em; height: 1.3em; }
+
+/* ---------- teclas ---------- */
+.key {
+  position: relative;
+  width: 2.2rem; height: 2.2rem;
+  border-radius: .7rem;
+  font-family: var(--font-mono); font-size: .85rem; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  background: #eceeff; color: rgba(21,22,58,.4);
+  box-shadow: 0 3px 0 #c9cdeb, inset 0 0 0 1.5px rgba(21,22,58,.06);
+  transform: translateY(0);
+  transition: transform .12s, box-shadow .12s, background .2s, color .2s;
+  transition-delay: calc(var(--i, 0) * 9ms);
+}
+.key:hover { transform: translateY(-2px); }
+.key.is-on { background: var(--k); color: #fff; box-shadow: 0 3px 0 var(--k-deep), inset 0 0 0 1.5px rgba(255,255,255,.25); }
+.key.is-digit-ink.is-on { color: var(--color-ink); }
+.key.is-preview:not(.is-on) { background: var(--k-soft); color: var(--k-deep); }
+.key:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--k-deep, #c9cdeb); }
+
+/* ---------- sellos (reglas) ---------- */
+.stamp {
+  position: relative; text-align: left; cursor: pointer;
+  border-radius: 1.1rem; padding: .85rem 1rem;
+  background: var(--color-paper);
+  border: 2.5px dashed rgba(21,22,58,.25);
+  transition: transform .2s cubic-bezier(.3,1.6,.5,1), background .2s, border-color .2s;
+}
+.stamp:hover { transform: rotate(-1.2deg) translateY(-2px); border-color: rgba(21,22,58,.55); }
+.stamp.is-on { border-style: solid; border-color: var(--k, var(--color-ink)); background: var(--k-soft, #fff); animation: stamp .42s cubic-bezier(.2,1.4,.4,1); transform: rotate(-1.5deg); }
+.stamp-mark {
+  position: absolute; top: .55rem; right: .65rem; width: 2.3rem; height: 2.3rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; font-weight: 800;
+  border: 2.5px solid rgba(21,22,58,.2); color: rgba(21,22,58,.25); transition: all .25s;
+}
+.stamp.is-on .stamp-mark { border-color: var(--k); color: var(--k); background: #fff; transform: rotate(-12deg); }
+@keyframes stamp { 0% { transform: scale(1.18) rotate(-9deg); opacity: .4; } 55% { transform: scale(.96) rotate(-2.5deg); opacity: 1; } 100% { transform: scale(1) rotate(-1.5deg); } }
+
+/* ---------- llaves (ejemplos) ---------- */
+.keytag {
+  position: relative; display: inline-flex; align-items: center; gap: .5rem;
+  padding: .55rem 1rem .55rem 2.3rem; border-radius: .9rem 1.6rem 1.6rem .9rem;
+  background: var(--color-paper); font-size: .85rem; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 0 var(--color-steel-deep), inset 0 0 0 2px rgba(21,22,58,.08);
+  transform-origin: 1.05rem 50%;
+  transition: transform .25s cubic-bezier(.3,1.6,.5,1), background .2s, color .2s;
+}
+.keytag::before { content: ""; position: absolute; left: .7rem; top: 50%; width: .75rem; height: .75rem; margin-top: -.375rem; border-radius: 50%; background: var(--color-ground); box-shadow: inset 0 2px 0 rgba(21,22,58,.35), 0 0 0 2px var(--color-steel); }
+.keytag:hover { animation: swing .7s ease-in-out; }
+.keytag.is-on { background: var(--color-ink); color: #fff; transform: translateY(-3px); box-shadow: 0 7px 0 #000a, inset 0 0 0 2px rgba(255,255,255,.1); }
+@keyframes swing { 0% { transform: rotate(0); } 25% { transform: rotate(-7deg); } 55% { transform: rotate(5deg); } 80% { transform: rotate(-2deg); } 100% { transform: rotate(0); } }
+
+/* ---------- tarjetas que se voltean ---------- */
+.flip { perspective: 1100px; }
+.flip-inner { position: relative; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,1.3,.5,1); }
+.flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 1.4rem; overflow: auto; }
+.flip-back { transform: rotateY(180deg); }
+
+/* ---------- boletos ---------- */
+.ticket {
+  position: relative; border-radius: 1.2rem; background: var(--color-paper);
+  -webkit-mask: radial-gradient(circle .6rem at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle .6rem at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+          mask: radial-gradient(circle .6rem at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle .6rem at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0ms !important; }
 }

@@ -104,3 +104,40 @@ for (const [k, want] of direct) {
   if (rows[k] !== want) throw new Error(`Parte 13 ${k}: motor=${rows[k]} esperado=${want}`)
   console.log(`OK Parte 13 ${k.padEnd(6)} ${want.toLocaleString('en-US')}`)
 }
+
+// Generador de ejemplos (decorativo): toda contraseña generada debe cumplir la política
+import { samplePassword } from './sample.ts'
+let sampled = 0
+for (const [lower, upper, digits, symbols] of alphabets) {
+  for (let length = 1; length <= 5; length++) {
+    for (let flags = 0; flags < 128; flags++) {
+      const c: Config = {
+        ...base, length, lower, upper, digits, symbols,
+        repetition: !!(flags & 1),
+        requireLower: !!(flags & 2), requireUpper: !!(flags & 4),
+        requireDigit: !!(flags & 8), requireSymbol: !!(flags & 16),
+        endsWithDigit: !!(flags & 32), noStartSymbol: !!(flags & 64),
+      }
+      const possible = compute(c).total > 0n
+      for (let r = 0; r < 4; r++) {
+        const pw = samplePassword(c)
+        if (!possible) {
+          if (pw !== null) throw new Error(`sampler devolvió algo sin solución: ${JSON.stringify(c)}`)
+          continue
+        }
+        if (!pw) throw new Error(`sampler no encontró solución posible: ${JSON.stringify(c)}`)
+        const kinds = pw.map((t) => t.kind)
+        const chars = pw.map((t) => t.ch)
+        const bad =
+          pw.length !== length ||
+          (!c.repetition && new Set(chars).size !== chars.length) ||
+          (c.requireLower && !kinds.includes('lower')) || (c.requireUpper && !kinds.includes('upper')) ||
+          (c.requireDigit && !kinds.includes('digit')) || (c.requireSymbol && !kinds.includes('symbol')) ||
+          (c.endsWithDigit && kinds[length - 1] !== 'digit') || (c.noStartSymbol && kinds[0] === 'symbol')
+        if (bad) throw new Error(`contraseña inválida ${chars.join('')} para ${JSON.stringify(c)}`)
+        sampled++
+      }
+    }
+  }
+}
+console.log(`OK generador: ${sampled} contraseñas de ejemplo válidas`)
